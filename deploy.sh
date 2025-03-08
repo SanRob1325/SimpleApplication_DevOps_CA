@@ -2,7 +2,8 @@ set -e
 echo "Start deployment"
 
 echo "Update the system and install Node.js"
-sudo apt update && sudo apt install nodejs 
+sudo dnf update -y
+sudo dnf install -y nodejs npm
 
 echo "Installing PM2"
 sudo npm install -g pm2
