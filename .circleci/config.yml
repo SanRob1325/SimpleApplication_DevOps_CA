@@ -1,0 +1,23 @@
+name: CI/CD Pipeline
+
+executors:
+  # for defining Ubuntu environment
+  node-executor:
+    docker:
+      - image: circleci/node:14
+    working_directory: ~/repo
+      
+jobs: 
+  test:
+    executor: node-executor
+    step:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            npm install
+      - run:
+          name: Run Tests
+          command: |
+            npm test
+
