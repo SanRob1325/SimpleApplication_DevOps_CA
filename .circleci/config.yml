@@ -23,8 +23,12 @@ jobs:
       - image: circleci/node:10.16.3
     steps:
       - checkout
+      - setup_remote_docker
       - restore_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
+      - run:
+          name: update-npm
+          command: sudo npm install -g npm@5
       - run:
           name: install-npm
           command: npm install
@@ -33,15 +37,27 @@ jobs:
           paths:
             - ./node_modules
       - run:
+          name: test-run
+          command: npm run test
+      - run:
           name: audit-packages
           command: npm audit || true
+      - run:
+          name: docker-login
+          command: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - run:
+          name: Build Docker Image
+          command: docker build -t $IMAGE_NAME:latest .
+      - run:
+          name: Publish Docker Image
+          command: docker push $DOCKER_USERNAME/$IMAGE_NAME
           
   deploy:
     docker:
       - image: circleci/node:10.16.3
     steps:
       - run:
-          name: deploy-application
+          name: preparing-tss-ssl-certificates
           command: |
             #Creating temporary certificates 
             echo "$PRIVATE_KEY" > privatekey.pem
@@ -53,27 +69,43 @@ jobs:
 
             rm privatekey.pem server.crt
 
-            ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS '
+      - run:
+          name: deploy-application
+          command: |
+            ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$EC2_PUBLIC_DNS '      
+              if ! command -v docker &> /dev/null; then
+                echo 'Docker is not found'
+                sudo dnf update -y 
+                sudo dnf install -y docker
+                sudo systemctl start docker
+                sudo systemctl enable docker
+              fi
+
+              echo "removing old application directory"
+              rm -rf SimpleApplication_DevOps_CA/
+
+              echo "cloning repository"
+              git clone https://github.com/SanRob1325/SimpleApplication_DevOps_CA.git
+
+              echo "Setting up execution by granting permissions"
+              chmod +x SimpleApplication_DevOps_CA/deploy.sh
                     
-                    if ! command -v git &> /dev/null; then
-                      echo 'Git is not found.Install git'
-                      sudo dnf update -y 
-                      sudo dnf install -y git
-                    fi
+              echo 'Preparing HTTPS certificates for security'
+              mv ~/privatekey.pem ~/server.crt SimpleApplication_DevOps_CA/
+              chmod 600 SimpleApplication_DevOps_CA/privatekey.pem SimpleApplication_DevOps_CA/server.crt
 
-                    echo "removing old application directory"
-                    rm -rf SimpleApplication_DevOps_CA/
+              echo 'Pulling latest Docker image'
+              sudo docker pull $DOCKER_USERNAME$IMAGE_NAME:latest
 
-                    echo "cloning repository"
-                    git clone https://github.com/SanRob1325/SimpleApplication_DevOps_CA.git
+              echo 'Stopping existing container if it is running'
+              sudo docker stop simple_app_container || true
+              sudo docker rm simple_app_container || true
 
-                    echo "Setting up execution by granting permissions"
-                    chmod +x SimpleApplication_DevOps_CA/deploy.sh
-                    
-                    echo 'Preparing HTTPS certificates for security'
-                    mv ~/privatekey.pem ~/server.crt SimpleApplication_DevOps_CA/
-                    chmod 600 SimpleApplication_DevOps_CA/privatekey.pem SimpleApplication_DevOps_CA/server.crt
+              echo 'Running docker container'
+              sudo docker run -d -p 8080:8080 -p 8443:8443 --name simple_app_container \
+                -v \$(pwd)/SimpleApplication_DevOps_CA/privatekey.pem:/app/privatekey.pem \
+                -v \$(pwd)/SimpleApplication_DevOps_CA/server.crt:/app/server.crt \
+                $DOCKER_USERNAME/$IMAGE_NAME:latest
 
-                    echo "Adding deployment sh script"
-                    cd SimpleApplication_DevOps_CA && bash deploy.sh
-                  '
+              echo "Deployment successful"
+            '
