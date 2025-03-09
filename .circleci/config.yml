@@ -90,22 +90,22 @@ jobs:
               echo "Setting up execution by granting permissions"
               chmod +x SimpleApplication_DevOps_CA/deploy.sh
                     
-              echo 'Preparing HTTPS certificates for security'
+              echo "Preparing HTTPS certificates for security"
               mv ~/privatekey.pem ~/server.crt SimpleApplication_DevOps_CA/
               chmod 600 SimpleApplication_DevOps_CA/privatekey.pem SimpleApplication_DevOps_CA/server.crt
 
-              echo 'Pulling latest Docker image'
-              sudo docker pull $DOCKER_USERNAME$IMAGE_NAME:latest
+              echo "Pulling latest Docker image"
+              sudo docker pull '$DOCKER_USERNAME$IMAGE_NAME:latest'
 
-              echo 'Stopping existing container if it is running'
+              echo "Stopping existing container if it is running"
               sudo docker stop simple_app_container || true
               sudo docker rm simple_app_container || true
 
-              echo 'Running docker container'
+              echo "Running docker container"
               sudo docker run -d -p 8080:8080 -p 8443:8443 --name simple_app_container \
-                -v \$(pwd)/SimpleApplication_DevOps_CA/privatekey.pem:/app/privatekey.pem \
-                -v \$(pwd)/SimpleApplication_DevOps_CA/server.crt:/app/server.crt \
-                $DOCKER_USERNAME/$IMAGE_NAME:latest
+                -v $(pwd)/SimpleApplication_DevOps_CA/privatekey.pem:/app/privatekey.pem \
+                -v $(pwd)/SimpleApplication_DevOps_CA/server.crt:/app/server.crt \
+                '$DOCKER_USERNAME/$IMAGE_NAME:latest'
 
               echo "Deployment successful"
             '
