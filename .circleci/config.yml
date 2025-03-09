@@ -95,7 +95,7 @@ jobs:
               chmod 600 SimpleApplication_DevOps_CA/privatekey.pem SimpleApplication_DevOps_CA/server.crt
 
               echo 'Pulling latest Docker image'
-              sudo docker pull $DOCKER_USERNAME$IMAGE_NAME:latest
+              sudo docker pull $DOCKER_USERNAME/$IMAGE_NAME:latest
 
               echo 'Stopping existing container if it is running'
               sudo docker stop simple_app_container || true
