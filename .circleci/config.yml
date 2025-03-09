@@ -47,7 +47,7 @@ jobs:
           command: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       - run:
           name: Build Docker Image
-          command: docker build -t $IMAGE_NAME:latest .
+          command: docker build -t $DOCKER_USERNAME/$IMAGE_NAME:latest .
       - run:
           name: Publish Docker Image
           command: docker push $DOCKER_USERNAME/$IMAGE_NAME
