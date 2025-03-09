@@ -16,6 +16,9 @@ cd SimpleApplication_DevOps_CA/
 echo "Installing dependencies"
 npm install
 
+echo "Enabling security"
+echo $PRIVATE_KEY > privatekey.pem
+echo $SERVER > server.crt
 echo "Starting application"
 pm2 start app.js --name simple_app
 
