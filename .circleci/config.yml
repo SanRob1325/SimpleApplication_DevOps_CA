@@ -50,7 +50,7 @@ jobs:
           command: docker build -t $IMAGE_NAME:latest .
       - run:
           name: Publish Docker Image
-          command: docker push $IMAGE_NAME
+          command: docker push $IMAGE_NAME:latest
           
   deploy:
     docker:
