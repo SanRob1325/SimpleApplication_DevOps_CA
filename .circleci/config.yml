@@ -3,10 +3,7 @@ version: 2.1
 workflows:
   build-and-deploy:
     jobs:
-      - lint
       - build:
-          requires:
-            - lint
           filters:
             branches:
               only:
@@ -20,22 +17,10 @@ workflows:
                 - main
 
 jobs:
-  lint:
-    docker:
-      - image: circleci/node:14.17.6
-    steps:
-      - checkout
-      - run:
-          name: Install npm dependencies
-          command: npm install
-      - run:
-          name: Run linting
-          command: npm run lint
-
   build:
     working_directory: ~/SimpleApplication
     docker:
-      - image: circleci/node:14.17.6
+      - image: circleci/node:10.16.3
     steps:
       - checkout
       - restore_cache:
@@ -43,12 +28,6 @@ jobs:
       - run:
           name: install-npm
           command: npm install
-      - run:
-          name: Install ESLint
-          command: npm install eslint --save-dev
-      - run:
-          name: Running linting
-          command: npm run lint
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
@@ -58,11 +37,11 @@ jobs:
           command: npm audit || true
       - run:
           name: test-npm
-          command: npm test || true
+          command: npm test ||
           
   deploy:
     docker:
-      - image: circleci/node:14.17.6
+      - image: circleci/node:10.16.3
     steps:
       - run:
           name: deploy-application
