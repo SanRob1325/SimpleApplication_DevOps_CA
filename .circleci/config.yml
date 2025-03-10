@@ -3,7 +3,10 @@ version: 2.1
 workflows:
   build-and-deploy:
     jobs:
+      - lint
       - build:
+          requires:
+            - lint
           filters:
             branches:
               only:
@@ -17,6 +20,18 @@ workflows:
                 - main
 
 jobs:
+  lint:
+    docker:
+      - image: circleci/node:10.16.3
+    steps:
+      - checkout
+      - run:
+          name: Install npm dependencies
+          command: npm install
+      - run:
+          name: Run linting
+          command: npm run lint
+          
   build:
     working_directory: ~/SimpleApplication
     docker:
