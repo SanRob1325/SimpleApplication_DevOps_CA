@@ -31,7 +31,7 @@ jobs:
       - run:
           name: Run linting
           command: npm run lint
-          
+
   build:
     working_directory: ~/SimpleApplication
     docker:
@@ -43,6 +43,9 @@ jobs:
       - run:
           name: install-npm
           command: npm install
+      - run:
+          name: Install ESLint
+          command: npm install eslint --save-dev
       - run:
           name: Running linting
           command: npm run lint
