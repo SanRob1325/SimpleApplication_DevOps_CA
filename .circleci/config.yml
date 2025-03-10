@@ -28,6 +28,9 @@ jobs:
       - run:
           name: install-npm
           command: npm install
+      - run:
+          name: Running linting
+          command: npm run lint
       - save_cache:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
@@ -35,6 +38,9 @@ jobs:
       - run:
           name: audit-packages
           command: npm audit || true
+      - run:
+          name: test-npm
+          command: npm test || true
           
   deploy:
     docker:
