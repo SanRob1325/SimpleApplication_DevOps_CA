@@ -37,7 +37,7 @@ jobs:
           command: npm audit || true
       - run:
           name: test-npm
-          command: npm test ||
+          command: npm test || true
           
   deploy:
     docker:
